@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Divvy - split the rent fairly</title>
+<meta name="description" content="Split the rent between housemates when the rooms are not the same. Everyone says what each room is worth to them, and Divvy sets each room's rent so nobody would rather have paid for someone else's.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M20 52 L50 24 L80 52' fill='none' stroke='%232f9b73' stroke-width='11' stroke-linecap='round' stroke-linejoin='round'/%3E%3Crect x='28' y='50' width='44' height='30' rx='4' fill='none' stroke='%232f9b73' stroke-width='11'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#place">Skip to the rent</a>
+
+<header class="top">
+  <div class="brand">
+    <span class="logo" aria-hidden="true">
+      <svg viewBox="0 0 100 100" width="34" height="34"><path d="M20 52 L50 24 L80 52" fill="none" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><rect x="28" y="50" width="44" height="30" rx="4" fill="none" stroke="currentColor" stroke-width="11"/></svg>
+    </span>
+    <h1>Divvy</h1>
+  </div>
+  <p class="tag">Split the rent when the rooms aren't the same.</p>
+</header>
+
+<main>
+  <section class="card" id="place" aria-labelledby="place-h">
+    <h2 id="place-h">Your place</h2>
+    <label class="field">
+      <span>Total rent for everyone, each month</span>
+      <input id="rent" type="text" inputmode="decimal" placeholder="e.g. 2400" value="2400">
+    </label>
+
+    <div class="field">
+      <span>The rooms</span>
+      <div id="rooms" class="rooms"></div>
+      <button type="button" id="add-room" class="ghost small">Add a room</button>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="people-h">
+    <h2 id="people-h">What each room is worth to each person</h2>
+    <p class="lead">For each person, split the rent across the rooms the way they'd happily pay. Put more on the room they want. The numbers are a wish, not a promise, so it's fine if they don't add up exactly.</p>
+    <div id="people" class="people"></div>
+    <div class="actions">
+      <button type="button" id="add-person" class="ghost small">Add a person</button>
+    </div>
+  </section>
+
+  <div class="actions big">
+    <button type="button" id="go" class="primary">Work out the split</button>
+    <button type="button" id="example" class="ghost">Try an example</button>
+  </div>
+
+  <section class="card result hidden" id="result" aria-labelledby="result-h" aria-live="polite">
+    <h2 id="result-h">The split</h2>
+    <p class="verdict" id="verdict"></p>
+    <ul class="split" id="split"></ul>
+    <div class="actions">
+      <button type="button" id="copy" class="ghost small">Copy it for the group chat</button>
+      <button type="button" id="share" class="ghost small">Copy a link</button>
+    </div>
+    <p class="said" id="said" aria-live="polite"></p>
+  </section>
+
+  <details class="note">
+    <summary>How Divvy picks the rents</summary>
+    <p>When rooms aren't the same, splitting the rent in equal parts isn't fair, and haggling over a number nobody can justify is how housemates fall out. Divvy asks everyone the one question that matters: what is each room worth to you? From those answers it does two things.</p>
+    <p>First it gives each person the room that makes the group happiest overall, so the rooms go where they're wanted most. Then it sets each room's rent so that <strong>nobody would rather have paid someone else's rent for their room</strong>. That's the test of a fair split: if you can look at what everyone else pays and still be glad of your own deal, no one can say they were hard done by. The rents always add up to the real total.</p>
+    <p>Fair-division researchers call a split like that "envy-free", and that it can always be done is a known result (Svensson 1983; Alkan, Demange and Gale 1991). The site <a href="http://www.spliddit.org/apps/rent">Spliddit</a> brought it to the public. Divvy works it out with the Hungarian algorithm and checks its own answer before showing it.</p>
+    <p>It's a guide to a fair starting point, not a tenancy agreement. Nothing you type leaves your device.</p>
+  </details>
+</main>
+
+<footer class="foot">
+  <p>Made by <a href="https://johanthegoat.xyz">Johan</a>. <a href="https://github.com/johanthegoatt/divvy">Code</a>.</p>
+</footer>
+
+<!-- Nook, the little house -->
+<div class="nook-dock" id="nook-dock">
+  <p class="nook-bubble" id="nook-bubble" role="status" aria-live="polite"></p>
+  <button class="nook" id="nook" type="button" data-mood="idle" aria-label="Nook the house. Tap for a tip.">
+    <svg viewBox="0 0 120 130" width="84" height="91" aria-hidden="true">
+      <path class="n-roof" d="M60 20 L104 58 L16 58 Z"/>
+      <rect class="n-body" x="26" y="56" width="68" height="58" rx="5"/>
+      <rect class="n-door" x="52" y="82" width="16" height="32" rx="2"/>
+      <circle class="n-knob" cx="64" cy="98" r="1.8"/>
+      <g class="n-face">
+        <rect class="n-win" x="34" y="66" width="16" height="14" rx="2"/>
+        <rect class="n-win" x="70" y="66" width="16" height="14" rx="2"/>
+        <circle class="n-eye" cx="42" cy="73" r="2.6"/>
+        <circle class="n-eye" cx="78" cy="73" r="2.6"/>
+      </g>
+      <circle class="n-chimney-puff" cx="90" cy="30" r="0"/>
+      <rect class="n-chimney" x="82" y="30" width="12" height="16" rx="2"/>
+    </svg>
+  </button>
+  <button class="nook-hide" id="nook-hide" type="button" aria-label="Tuck Nook away">tuck</button>
+</div>
+
+<template id="tpl-room">
+  <div class="room-row">
+    <input type="text" class="room-name" maxlength="24" placeholder="Room name">
+    <button type="button" class="room-del ghost small" aria-label="Remove this room">remove</button>
+  </div>
+</template>
+
+<template id="tpl-person">
+  <div class="person">
+    <div class="person-head">
+      <input type="text" class="person-name" maxlength="24" placeholder="Name">
+      <button type="button" class="person-del ghost small" aria-label="Remove this person">remove</button>
+    </div>
+    <div class="bids"></div>
+    <p class="person-sum"></p>
+  </div>
+</template>
+
+<script src="src/engine.js"></script>
+<script src="src/nook.js"></script>
+<script src="src/app.js"></script>
+</body>
+</html>
