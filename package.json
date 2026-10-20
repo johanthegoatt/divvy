@@ -1,0 +1,10 @@
+{
+  "name": "divvy",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Split the rent between housemates so nobody feels hard done by. Everyone says what each room is worth to them; Divvy hands out the rooms and sets each room's rent so no one would rather have paid for someone else's. With Nook the little house.",
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "MIT"
+}
