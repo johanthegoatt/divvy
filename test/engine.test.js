@@ -118,3 +118,45 @@ test("the engine's own envy-free flag agrees with the brute-force check", () => 
   assert.ok(r.envyFree);
   assert.ok(r.worstEnvy <= 1);
 });
+
+test("shared bills split equally on top of the rent, to the cent", () => {
+  const r = Divvy.solve({
+    rent: "2400",
+    bills: "120",
+    names: ["A", "B", "C"],
+    rooms: ["Big", "Mid", "Small"],
+    bids: [[1000, 800, 600], [900, 900, 600], [700, 900, 800]]
+  });
+  assert.ok(!r.error);
+  assert.strictEqual(r.bills, 12000);
+  // Each person's bill share adds up to the whole bill.
+  assert.strictEqual(r.people.reduce((a, p) => a + p.bills, 0), 12000);
+  // 120 over 3 is exactly 40 each.
+  r.people.forEach((p) => assert.strictEqual(p.bills, 4000));
+  // The total is the room rent plus the bill share.
+  r.people.forEach((p) => assert.strictEqual(p.total, p.rent + p.bills));
+  // The totals still add up to rent plus bills.
+  assert.strictEqual(r.people.reduce((a, p) => a + p.total, 0), 240000 + 12000);
+});
+
+test("no bills means a zero share and total equal to rent", () => {
+  const r = Divvy.solve({
+    rent: "1500",
+    names: ["A", "B"],
+    rooms: ["One", "Two"],
+    bids: [[900, 600], [700, 800]]
+  });
+  assert.strictEqual(r.bills, 0);
+  r.people.forEach((p) => { assert.strictEqual(p.bills, 0); assert.strictEqual(p.total, p.rent); });
+});
+
+test("an odd bill still splits to the cent", () => {
+  const r = Divvy.solve({
+    rent: "1000",
+    bills: "100.01",
+    names: ["A", "B", "C"],
+    rooms: ["One", "Two", "Three"],
+    bids: [[500, 300, 200], [300, 500, 200], [200, 300, 500]]
+  });
+  assert.strictEqual(r.people.reduce((a, p) => a + p.bills, 0), 10001);
+});
