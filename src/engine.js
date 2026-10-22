@@ -155,14 +155,24 @@
     var shift = spread(rent - sumB, n); // at most a cent apart between rooms
     var price = m.b.map(function (bj, j) { return bj + shift[j]; });
 
+    // Shared bills (utilities, internet, a cleaner) are nobody's room, so they
+    // split equally between the people, not by the rooms. Everyone paying the
+    // same share leaves the envy-free rents untouched. Kept in whole cents.
+    var billsTotal = cents(input.bills) || 0;
+    var billShare = billsTotal > 0 ? spread(billsTotal, n) : null;
+
     var result = [];
     for (var pi = 0; pi < n; pi++) {
       var rj = m.room[pi];
+      var share = billShare ? billShare[pi] : 0;
       result.push({
         name: names[pi],
         room: rooms[rj],
         roomIndex: rj,
         rent: price[rj],
+        bills: share,
+        // The real monthly cheque: this room's rent plus this person's bills.
+        total: price[rj] + share,
         // What this person thinks the room is worth minus what they pay: their
         // "deal". A bigger number means a better deal in their own eyes.
         deal: value[pi][rj] - price[rj],
@@ -185,6 +195,7 @@
 
     return {
       rent: rent,
+      bills: billsTotal,
       people: result,
       prices: price,
       rooms: rooms,
