@@ -7,7 +7,7 @@
   var E = window.Divvy, N = window.Nook;
   var $ = function (id) { return document.getElementById(id); };
 
-  var rentEl = $("rent"), roomsEl = $("rooms"), peopleEl = $("people");
+  var rentEl = $("rent"), billsEl = $("bills"), roomsEl = $("rooms"), peopleEl = $("people");
   var resultEl = $("result"), splitEl = $("split"), verdictEl = $("verdict"), saidEl = $("said");
   var tplRoom = $("tpl-room").content, tplPerson = $("tpl-person").content;
 
@@ -104,6 +104,7 @@
 
     var out = E.solve({
       rent: rentEl.value,
+      bills: billsEl ? billsEl.value : "",
       names: people.map(function (p, i) { return (p.name || "").trim() || ("Person " + (i + 1)); }),
       rooms: rooms.map(function (r, i) { return (r || "").trim() || ("Room " + (i + 1)); }),
       bids: people.map(function (p) { return p.bids.slice(); })
@@ -132,7 +133,14 @@
       var room = document.createElement("div"); room.className = "s-room"; room.textContent = "takes " + p.room;
       var deal = document.createElement("div"); deal.className = "s-deal"; deal.textContent = dealWord(p.deal);
       main.appendChild(who); main.appendChild(room); main.appendChild(deal);
-      var rent = document.createElement("div"); rent.className = "s-rent"; rent.textContent = "$" + money(p.rent);
+      var rent = document.createElement("div"); rent.className = "s-rent";
+      var pay = out.bills > 0 ? p.total : p.rent;
+      rent.dataset.pay = "$" + money(pay);
+      if (out.bills > 0) {
+        rent.innerHTML = "$" + money(pay) + '<span class="s-break">$' + money(p.rent) + " rent + $" + money(p.bills) + " bills</span>";
+      } else {
+        rent.textContent = "$" + money(pay);
+      }
       li.appendChild(main); li.appendChild(rent);
       splitEl.appendChild(li);
     });
@@ -154,7 +162,7 @@
     [].forEach.call(splitEl.children, function (li) {
       var who = li.querySelector(".s-who").textContent;
       var room = li.querySelector(".s-room").textContent;
-      var pay = li.querySelector(".s-rent").textContent;
+      var pay = li.querySelector(".s-rent").dataset.pay;
       lines.push("- " + who + " " + room + ": " + pay);
     });
     lines.push("Worked out so everyone's happy with their own room. (Divvy)");
