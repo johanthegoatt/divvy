@@ -7,7 +7,7 @@
   var E = window.Divvy, N = window.Nook;
   var $ = function (id) { return document.getElementById(id); };
 
-  var rentEl = $("rent"), billsEl = $("bills"), roomsEl = $("rooms"), peopleEl = $("people");
+  var rentEl = $("rent"), billsEl = $("bills"), depositEl = $("deposit"), roomsEl = $("rooms"), peopleEl = $("people");
   var resultEl = $("result"), splitEl = $("split"), verdictEl = $("verdict"), saidEl = $("said");
   var tplRoom = $("tpl-room").content, tplPerson = $("tpl-person").content;
 
@@ -105,6 +105,7 @@
     var out = E.solve({
       rent: rentEl.value,
       bills: billsEl ? billsEl.value : "",
+      deposit: depositEl ? depositEl.value : "",
       names: people.map(function (p, i) { return (p.name || "").trim() || ("Person " + (i + 1)); }),
       rooms: rooms.map(function (r, i) { return (r || "").trim() || ("Room " + (i + 1)); }),
       bids: people.map(function (p) { return p.bids.slice(); })
@@ -142,6 +143,11 @@
         rent.textContent = "$" + money(pay);
       }
       li.appendChild(main); li.appendChild(rent);
+      if (out.deposit > 0) {
+        var dep = document.createElement("div"); dep.className = "s-dep";
+        dep.textContent = "+ $" + money(p.deposit) + " deposit (one-off)";
+        li.appendChild(dep);
+      }
       splitEl.appendChild(li);
     });
     if (out.envyFree) {

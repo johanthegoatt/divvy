@@ -94,6 +94,7 @@ button { font: inherit; cursor: pointer; border-radius: 10px; border: 1px solid 
 .s-deal { color: var(--soft); font-size: 13px; margin-top: 2px; }
 .s-rent { font-weight: 700; white-space: nowrap; font-size: 18px; text-align: right; }
 .s-break { display: block; font-weight: 400; font-size: 12px; opacity: .7; margin-top: 2px; }
+.s-dep { color: var(--soft); font-size: 12px; margin-top: 4px; width: 100%; text-align: right; }
 .said { margin: 10px 0 0; font-size: 14px; color: var(--soft); min-height: 1.1em; }
 
 .note { max-width: 680px; margin: 8px auto 0; padding: 0 20px; color: var(--soft); font-size: 14px; }
