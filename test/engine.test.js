@@ -160,3 +160,42 @@ test("an odd bill still splits to the cent", () => {
   });
   assert.strictEqual(r.people.reduce((a, p) => a + p.bills, 0), 10001);
 });
+
+test("allocate splits a total by weight to the exact cent", () => {
+  const a = Divvy.allocate(1000, [3, 1]); // 75% / 25%
+  assert.deepStrictEqual(a, [750, 250]);
+  const b = Divvy.allocate(100, [1, 1, 1]); // odd cent to the earliest
+  assert.deepStrictEqual(b, [34, 33, 33]);
+  assert.strictEqual(b.reduce((x, y) => x + y, 0), 100);
+});
+
+test("allocate with no positive weight falls back to an even spread", () => {
+  assert.deepStrictEqual(Divvy.allocate(100, [0, 0]), [50, 50]);
+});
+
+test("the deposit is split by each person's rent, not equally", () => {
+  const r = Divvy.solve({
+    rent: "3000", deposit: "3000",
+    names: ["A", "B"], rooms: ["Big", "Small"],
+    bids: [[2000, 1000], [2000, 1000]]
+  });
+  assert.ok(!r.error);
+  // Both value Big at 2000 and Small at 1000, so rents come out 2000 / 1000.
+  const big = r.people.find(p => p.room === "Big");
+  const small = r.people.find(p => p.room === "Small");
+  assert.strictEqual(big.rent + small.rent, 300000);
+  // A one-month deposit (= rent) splits in the same 2:1 proportion.
+  assert.strictEqual(big.deposit + small.deposit, 300000);
+  assert.strictEqual(big.deposit, 200000);
+  assert.strictEqual(small.deposit, 100000);
+  assert.ok(Math.abs(r.depositMonths - 1) < 1e-9);
+});
+
+test("no deposit leaves every person's deposit at zero and the split unchanged", () => {
+  const r = Divvy.solve({
+    rent: "2400", names: ["A", "B"], rooms: ["X", "Y"],
+    bids: [[1200, 1200], [1200, 1200]]
+  });
+  assert.strictEqual(r.deposit, 0);
+  assert.ok(r.people.every(p => p.deposit === 0));
+});
