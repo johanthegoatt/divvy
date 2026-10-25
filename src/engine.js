@@ -55,6 +55,26 @@
     return out;
   }
 
+  // Split a whole total across parts in proportion to weights, in whole cents,
+  // summing to exactly the total. Largest-remainder, odd cents to the biggest
+  // fractional parts, ties to the earliest. Used for the deposit, which is
+  // shared by how much rent each person pays, not equally. Non-positive weights
+  // get nothing; if no weight is positive it falls back to an even spread.
+  function allocate(total, weights) {
+    var n = weights.length;
+    var w = weights.map(function (v) { return v > 0 ? v : 0; });
+    var sum = w.reduce(function (a, b) { return a + b; }, 0);
+    if (sum <= 0) return spread(total, n);
+    var exact = w.map(function (v) { return total * v / sum; });
+    var out = exact.map(function (v) { return Math.floor(v); });
+    var drift = total - out.reduce(function (a, b) { return a + b; }, 0);
+    var order = exact
+      .map(function (v, j) { return { j: j, frac: v - Math.floor(v) }; })
+      .sort(function (a, b) { return b.frac - a.frac || a.j - b.j; });
+    for (var k = 0; k < drift; k++) out[order[k % n].j] += 1;
+    return out;
+  }
+
   // Scale one person's bids so they add up to the rent, in whole cents. This
   // puts everyone on the same scale (what Spliddit asks people to do by hand),
   // keeping each person's relative likes and dislikes. A person who bids nothing
@@ -161,16 +181,25 @@
     var billsTotal = cents(input.bills) || 0;
     var billShare = billsTotal > 0 ? spread(billsTotal, n) : null;
 
+    // The deposit is usually set as a multiple of the rent, so it belongs to
+    // the people in proportion to the rent they pay: the dearer room carries
+    // more of it. Splitting it equally would overcharge whoever took the small
+    // room. Allotted by each person's room rent, in whole cents.
+    var depositTotal = cents(input.deposit) || 0;
+    var depositByRoom = depositTotal > 0 ? allocate(depositTotal, price) : null;
+
     var result = [];
     for (var pi = 0; pi < n; pi++) {
       var rj = m.room[pi];
       var share = billShare ? billShare[pi] : 0;
+      var dep = depositByRoom ? depositByRoom[rj] : 0;
       result.push({
         name: names[pi],
         room: rooms[rj],
         roomIndex: rj,
         rent: price[rj],
         bills: share,
+        deposit: dep,
         // The real monthly cheque: this room's rent plus this person's bills.
         total: price[rj] + share,
         // What this person thinks the room is worth minus what they pay: their
@@ -196,6 +225,11 @@
     return {
       rent: rent,
       bills: billsTotal,
+      deposit: depositTotal,
+      // The deposit as a multiple of the monthly rent, for a sanity check (a
+      // deposit is often one month, and in England capped at five weeks' rent
+      // on an annual rent under 50,000 by the Tenant Fees Act 2019).
+      depositMonths: depositTotal > 0 ? depositTotal / rent : 0,
       people: result,
       prices: price,
       rooms: rooms,
@@ -207,5 +241,5 @@
     };
   }
 
-  return { cents: cents, spread: spread, normalizeRow: normalizeRow, assign: assign, solve: solve };
+  return { cents: cents, spread: spread, allocate: allocate, normalizeRow: normalizeRow, assign: assign, solve: solve };
 });
