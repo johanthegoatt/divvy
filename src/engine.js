@@ -188,6 +188,18 @@
     var depositTotal = cents(input.deposit) || 0;
     var depositByRoom = depositTotal > 0 ? allocate(depositTotal, price) : null;
 
+    // Deposit cap under the Tenant Fees Act 2019 (England): a landlord may take
+    // at most 5 weeks' rent as a tenancy deposit where the total annual rent is
+    // under £50,000, or 6 weeks' at or above that. Weekly rent is the monthly
+    // rent x 12 / 52. A deposit over the cap is unlawful to take in England, so
+    // flag it with the lawful maximum. England only; Scotland, Wales and NI
+    // differ, so it's advisory, not a ruling.
+    var annualRent = rent * 12;
+    var weeklyRent = rent * 12 / 52;
+    var depositCapWeeks = annualRent >= 5000000 ? 6 : 5;
+    var depositCap = Math.round(weeklyRent * depositCapWeeks);
+    var depositOverCap = depositTotal > 0 && depositTotal > depositCap;
+
     var result = [];
     for (var pi = 0; pi < n; pi++) {
       var rj = m.room[pi];
@@ -230,6 +242,11 @@
       // deposit is often one month, and in England capped at five weeks' rent
       // on an annual rent under 50,000 by the Tenant Fees Act 2019).
       depositMonths: depositTotal > 0 ? depositTotal / rent : 0,
+      // The Tenant Fees Act 2019 (England) deposit cap and whether this deposit
+      // is over it. See the note above the sum.
+      depositCap: depositCap,
+      depositCapWeeks: depositCapWeeks,
+      depositOverCap: depositOverCap,
       people: result,
       prices: price,
       rooms: rooms,
