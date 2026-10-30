@@ -199,3 +199,32 @@ test("no deposit leaves every person's deposit at zero and the split unchanged",
   assert.strictEqual(r.deposit, 0);
   assert.ok(r.people.every(p => p.deposit === 0));
 });
+
+test("flags a deposit above the Tenant Fees Act 2019 cap (5 weeks' rent under £50k/yr)", () => {
+  // Rent £1,000/month => annual £12,000 (< £50k) => cap is 5 weeks' rent.
+  // Weekly = 1000 * 12 / 52 = £230.77; cap = £1,153.85.
+  const over = Divvy.solve({
+    rent: "1000", deposit: "1500", names: ["A", "B"], rooms: ["X", "Y"],
+    bids: [[500, 500], [500, 500]]
+  });
+  assert.strictEqual(over.depositCapWeeks, 5);
+  assert.strictEqual(over.depositCap, Math.round(100000 * 12 / 52 * 5));
+  assert.strictEqual(over.depositOverCap, true);
+
+  // A one-month deposit (£1,000) is under the 5-week cap, so not flagged.
+  const ok = Divvy.solve({
+    rent: "1000", deposit: "1000", names: ["A", "B"], rooms: ["X", "Y"],
+    bids: [[500, 500], [500, 500]]
+  });
+  assert.strictEqual(ok.depositOverCap, false);
+});
+
+test("deposit cap is 6 weeks when annual rent is £50,000 or more", () => {
+  // Rent £5,000/month => annual £60,000 (>= £50k) => 6 weeks.
+  const r = Divvy.solve({
+    rent: "5000", deposit: "1", names: ["A", "B"], rooms: ["X", "Y"],
+    bids: [[2500, 2500], [2500, 2500]]
+  });
+  assert.strictEqual(r.depositCapWeeks, 6);
+  assert.strictEqual(r.depositCap, Math.round(500000 * 12 / 52 * 6));
+});
