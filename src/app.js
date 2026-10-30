@@ -150,6 +150,14 @@
       }
       splitEl.appendChild(li);
     });
+    if (out.depositOverCap) {
+      var capLi = document.createElement("li");
+      capLi.className = "s-note warn";
+      capLi.textContent = "Heads up: the deposit of $" + money(out.deposit) + " is more than " +
+        out.depositCapWeeks + " weeks' rent ($" + money(out.depositCap) + "). In England a landlord " +
+        "can't take more than that as a tenancy deposit (Tenant Fees Act 2019).";
+      splitEl.appendChild(capLi);
+    }
     if (out.envyFree) {
       verdictEl.className = "verdict ok";
       verdictEl.textContent = "Everyone is glad of their own room at this price. Nobody would rather pay what someone else pays for their room.";
