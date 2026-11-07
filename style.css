@@ -142,3 +142,9 @@ button { font: inherit; cursor: pointer; border-radius: 10px; border: 1px solid 
   .nook svg { width: 66px; height: 72px; }
   .nook-bubble { max-width: 200px; }
 }
+
+/* Council tax row: amount beside the number of full-time students. */
+.field--row { flex-direction: row; gap: 12px; align-items: flex-end; }
+.field--row > .field { flex: 1; margin-bottom: 0; }
+.field--narrow { flex: 0 0 120px; }
+.field--narrow input { width: 100%; }

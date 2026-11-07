@@ -8,6 +8,7 @@
   var $ = function (id) { return document.getElementById(id); };
 
   var rentEl = $("rent"), billsEl = $("bills"), depositEl = $("deposit"), roomsEl = $("rooms"), peopleEl = $("people");
+  var ctaxEl = $("ctax"), studentsEl = $("students");
   var resultEl = $("result"), splitEl = $("split"), verdictEl = $("verdict"), saidEl = $("said");
   var tplRoom = $("tpl-room").content, tplPerson = $("tpl-person").content;
 
@@ -157,6 +158,24 @@
         out.depositCapWeeks + " weeks' rent ($" + money(out.depositCap) + "). In England a landlord " +
         "can't take more than that as a tenancy deposit (Tenant Fees Act 2019).";
       splitEl.appendChild(capLi);
+    }
+    if (ctaxEl && E.cents(ctaxEl.value)) {
+      var nStudents = Math.max(0, Math.min(out.people.length, Math.floor(Number(studentsEl && studentsEl.value) || 0)));
+      var flags = out.people.map(function (_, i) { return i < nStudents; });
+      var ct = E.councilTax(ctaxEl.value, flags);
+      var ctLi = document.createElement("li");
+      ctLi.className = "s-note";
+      if (ct.exempt) {
+        ctLi.textContent = "Council tax: the house is exempt (everyone is a full-time student), so there's nothing to pay.";
+      } else {
+        var each = ct.liableCount > 0 ? Math.round(ct.payable / ct.liableCount) : ct.payable;
+        var head = "Council tax: $" + money(ct.payable) + " a month";
+        if (ct.discountRate) head += " (after the 25% single-person discount)";
+        ctLi.textContent = head + " — $" + money(each) + " each for the " + ct.liableCount +
+          " counted " + (ct.liableCount === 1 ? "adult" : "adults") +
+          (ct.disregarded ? "; the " + ct.disregarded + " student" + (ct.disregarded === 1 ? " is" : "s are") + " disregarded and don't pay." : ".");
+      }
+      splitEl.appendChild(ctLi);
     }
     if (out.envyFree) {
       verdictEl.className = "verdict ok";
