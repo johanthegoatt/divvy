@@ -228,3 +228,34 @@ test("deposit cap is 6 weeks when annual rent is £50,000 or more", () => {
   assert.strictEqual(r.depositCapWeeks, 6);
   assert.strictEqual(r.depositCap, Math.round(500000 * 12 / 52 * 6));
 });
+
+test("council tax: an all-student house is exempt and pays nothing", () => {
+  const r = Divvy.councilTax("1800", [true, true, true]);
+  assert.strictEqual(r.exempt, true);
+  assert.strictEqual(r.payable, 0);
+  assert.deepStrictEqual(r.perPerson, [0, 0, 0]);
+});
+
+test("council tax: one counted adult gets the 25% single-person discount", () => {
+  const r = Divvy.councilTax("2000", [false, true, true]); // one non-student, two students
+  assert.strictEqual(r.discountRate, 0.25);
+  assert.strictEqual(r.payable, Divvy.cents("1500")); // 2000 - 25%
+  assert.strictEqual(r.perPerson[0], Divvy.cents("1500")); // the non-student pays it all
+  assert.strictEqual(r.perPerson[1], 0);
+  assert.strictEqual(r.perPerson[2], 0);
+});
+
+test("council tax: students disregarded, bill split among the counted adults", () => {
+  const r = Divvy.councilTax("1800", [false, false, true]); // two non-students, one student
+  assert.strictEqual(r.discountRate, 0); // more than one counted, no discount
+  assert.strictEqual(r.payable, Divvy.cents("1800"));
+  assert.strictEqual(r.perPerson[2], 0); // the student pays nothing
+  assert.strictEqual(r.perPerson[0] + r.perPerson[1], Divvy.cents("1800"));
+});
+
+test("council tax: no students means a full equal split summing to the bill", () => {
+  const r = Divvy.councilTax("1200", [false, false, false]);
+  assert.strictEqual(r.payable, Divvy.cents("1200"));
+  assert.strictEqual(r.perPerson.reduce((a, b) => a + b, 0), Divvy.cents("1200"));
+  assert.strictEqual(r.disregarded, 0);
+});
