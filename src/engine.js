@@ -258,5 +258,50 @@
     };
   }
 
-  return { cents: cents, spread: spread, allocate: allocate, normalizeRow: normalizeRow, assign: assign, solve: solve };
+  // Council tax for a shared house, allowing for the student disregard and the
+  // single-person discount. The gov.uk rules: a "disregarded" person (a
+  // full-time student, among others) is not counted when working out the bill.
+  // A dwelling where everyone is disregarded, such as an all-student house, is
+  // exempt and pays nothing (a Class N exemption). Where exactly one adult is
+  // counted and the rest disregarded, the bill is cut by 25% (the single-person
+  // discount). Students are not usually liable in a mixed house, so the bill is
+  // shared only among the people who are counted.
+  //
+  // `students` is an array of booleans, one per housemate, true for a full-time
+  // student (disregarded). Amounts are in whole cents, like the rest of the
+  // engine, and each person's share sums back to exactly the payable bill.
+  function councilTax(amountRaw, students) {
+    students = students || [];
+    var amount = cents(amountRaw);
+    if (amount == null) amount = 0;
+    var n = students.length;
+    var disregarded = students.filter(Boolean).length;
+    var counted = n - disregarded;              // non-students = counted adults
+    var exempt = n > 0 && counted === 0;         // all disregarded -> exempt
+    var discountRate = (!exempt && counted === 1) ? 0.25 : 0;
+    var payable = exempt ? 0 : Math.round(amount * (1 - discountRate));
+
+    // The liable people are the counted (non-student) adults; split among them.
+    var liable = [];
+    students.forEach(function (s, i) { if (!s) liable.push(i); });
+    var per = new Array(n).fill(0);
+    if (payable > 0 && liable.length > 0) {
+      var parts = spread(payable, liable.length);
+      liable.forEach(function (i, k) { per[i] = parts[k]; });
+    }
+
+    var note;
+    if (exempt) note = "Everyone is a full-time student, so the house is exempt and pays no council tax.";
+    else if (discountRate) note = "One adult is counted and the rest are disregarded, so the bill gets the 25% single-person discount.";
+    else if (disregarded) note = "Students are disregarded and don't pay; the bill is shared between the " + liable.length + " counted adults.";
+    else note = "Everyone is counted, so the full bill is shared equally.";
+
+    return {
+      amount: amount, counted: counted, disregarded: disregarded,
+      exempt: exempt, discountRate: discountRate, payable: payable,
+      liableCount: liable.length, perPerson: per, note: note
+    };
+  }
+
+  return { cents: cents, spread: spread, allocate: allocate, normalizeRow: normalizeRow, assign: assign, solve: solve, councilTax: councilTax };
 });
