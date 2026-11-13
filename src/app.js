@@ -144,6 +144,11 @@
         rent.textContent = "$" + money(pay);
       }
       li.appendChild(main); li.appendChild(rent);
+      var vs = document.createElement("div"); vs.className = "s-vs";
+      if (p.vsEqual > 0) vs.textContent = "$" + money(p.vsEqual) + " more than an even split, for the better room";
+      else if (p.vsEqual < 0) vs.textContent = "$" + money(-p.vsEqual) + " less than an even split";
+      else vs.textContent = "the same as an even split";
+      li.appendChild(vs);
       if (out.deposit > 0) {
         var dep = document.createElement("div"); dep.className = "s-dep";
         dep.textContent = "+ $" + money(p.deposit) + " deposit (one-off)";

@@ -148,3 +148,5 @@ button { font: inherit; cursor: pointer; border-radius: 10px; border: 1px solid 
 .field--row > .field { flex: 1; margin-bottom: 0; }
 .field--narrow { flex: 0 0 120px; }
 .field--narrow input { width: 100%; }
+
+.s-vs { font-size: .82rem; color: var(--muted, #6b7280); margin-top: 2px; }
