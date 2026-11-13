@@ -259,3 +259,22 @@ test("council tax: no students means a full equal split summing to the bill", ()
   assert.strictEqual(r.perPerson.reduce((a, b) => a + b, 0), Divvy.cents("1200"));
   assert.strictEqual(r.disregarded, 0);
 });
+
+test("each person sees how their rent compares to an even split", function () {
+  var r = Divvy.solve({
+    rent: "3000",
+    names: ["A", "B", "C"],
+    rooms: ["Big", "Mid", "Small"],
+    bids: [[1400, 1000, 600], [1300, 1100, 600], [1200, 1000, 800]]
+  });
+  assert.ok(!r.error);
+  // The even split of 3000 across 3 is 1000 each; the vsEqual numbers sum to 0.
+  var sumVs = r.people.reduce(function (s, p) { return s + p.vsEqual; }, 0);
+  assert.equal(sumVs, 0, "premiums and discounts cancel out");
+  r.people.forEach(function (p) {
+    assert.equal(p.vsEqual, p.rent - p.equalShare);
+  });
+  // Someone pays more than the even split and someone pays less.
+  assert.ok(r.people.some(function (p) { return p.vsEqual > 0; }));
+  assert.ok(r.people.some(function (p) { return p.vsEqual < 0; }));
+});

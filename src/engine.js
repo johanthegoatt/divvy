@@ -200,6 +200,12 @@
     var depositCap = Math.round(weeklyRent * depositCapWeeks);
     var depositOverCap = depositTotal > 0 && depositTotal > depositCap;
 
+    // A naive "just split it evenly" rent, to compare the fair rents against.
+    // Showing the gap is what makes the result land: the person in the big room
+    // pays this much more than an even split, the small room this much less,
+    // and that gap is the whole point of pricing the rooms rather than halving.
+    var evenSplit = spread(rent, n);
+
     var result = [];
     for (var pi = 0; pi < n; pi++) {
       var rj = m.room[pi];
@@ -210,6 +216,10 @@
         room: rooms[rj],
         roomIndex: rj,
         rent: price[rj],
+        // The even-split rent and how this room's fair rent differs from it:
+        // positive means paying more than an even share, negative means less.
+        equalShare: evenSplit[pi],
+        vsEqual: price[rj] - evenSplit[pi],
         bills: share,
         deposit: dep,
         // The real monthly cheque: this room's rent plus this person's bills.
