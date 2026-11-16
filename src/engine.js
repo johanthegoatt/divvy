@@ -176,10 +176,28 @@
     var price = m.b.map(function (bj, j) { return bj + shift[j]; });
 
     // Shared bills (utilities, internet, a cleaner) are nobody's room, so they
-    // split equally between the people, not by the rooms. Everyone paying the
-    // same share leaves the envy-free rents untouched. Kept in whole cents.
+    // split between the people, not by the rooms, which leaves the envy-free
+    // rents untouched. By default that's an equal split. But an energy bill has
+    // two parts: a standing charge (a fixed daily fee you pay whatever you use,
+    // the same for the whole house) and the usage. The fair way is to split the
+    // standing charge equally — everyone benefits from the supply being on — and
+    // the usage by room share, since the bigger, dearer room takes more heating
+    // and light. Give the standing-charge part and Divvy does exactly that; all
+    // in whole cents. Standing charge is the fixed daily charge per Ofgem.
     var billsTotal = cents(input.bills) || 0;
-    var billShare = billsTotal > 0 ? spread(billsTotal, n) : null;
+    var standingTotal = cents(input.standing) || 0;
+    var billShare = null, billSplit = null;
+    if (billsTotal > 0) {
+      if (standingTotal > 0) {
+        var personRent = [];
+        for (var qi = 0; qi < n; qi++) personRent.push(price[m.room[qi]]);
+        // splitBill takes the raw amounts (it applies cents itself).
+        billSplit = splitBill(input.bills, input.standing, personRent);
+        billShare = billSplit.per;
+      } else {
+        billShare = spread(billsTotal, n);
+      }
+    }
 
     // The deposit is usually set as a multiple of the rent, so it belongs to
     // the people in proportion to the rent they pay: the dearer room carries
@@ -221,6 +239,8 @@
         equalShare: evenSplit[pi],
         vsEqual: price[rj] - evenSplit[pi],
         bills: share,
+        billStanding: billSplit ? billSplit.standingShares[pi] : 0,
+        billUsage: billSplit ? billSplit.usageShares[pi] : share,
         deposit: dep,
         // The real monthly cheque: this room's rent plus this person's bills.
         total: price[rj] + share,
@@ -247,6 +267,8 @@
     return {
       rent: rent,
       bills: billsTotal,
+      standing: standingTotal,
+      billSplit: billSplit,
       deposit: depositTotal,
       // The deposit as a multiple of the monthly rent, for a sanity check (a
       // deposit is often one month, and in England capped at five weeks' rent
@@ -280,6 +302,24 @@
   // `students` is an array of booleans, one per housemate, true for a full-time
   // student (disregarded). Amounts are in whole cents, like the rest of the
   // engine, and each person's share sums back to exactly the payable bill.
+  // Split a bill into a fixed standing charge (shared equally) and the usage
+  // (shared by weights, e.g. each person's room rent). Standing charge is the
+  // fixed daily fee an energy supplier charges whatever you use (Ofgem), so it's
+  // fair to share it equally; the usage follows the room share. Whole cents,
+  // and the parts always add back to the total to the penny.
+  function splitBill(totalRaw, standingRaw, weights) {
+    var total = cents(totalRaw) || 0;
+    var standing = cents(standingRaw) || 0;
+    if (standing < 0) standing = 0;
+    if (standing > total) standing = total;
+    var usage = total - standing;
+    var n = (weights || []).length;
+    var standingShares = (standing > 0 && n > 0) ? spread(standing, n) : new Array(n).fill(0);
+    var usageShares = (usage > 0 && n > 0) ? allocate(usage, weights) : new Array(n).fill(0);
+    var per = standingShares.map(function (s, i) { return s + usageShares[i]; });
+    return { total: total, standing: standing, usage: usage, standingShares: standingShares, usageShares: usageShares, per: per };
+  }
+
   function councilTax(amountRaw, students) {
     students = students || [];
     var amount = cents(amountRaw);
@@ -313,5 +353,5 @@
     };
   }
 
-  return { cents: cents, spread: spread, allocate: allocate, normalizeRow: normalizeRow, assign: assign, solve: solve, councilTax: councilTax };
+  return { cents: cents, spread: spread, allocate: allocate, normalizeRow: normalizeRow, assign: assign, solve: solve, councilTax: councilTax, splitBill: splitBill };
 });
