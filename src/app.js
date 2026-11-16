@@ -7,7 +7,7 @@
   var E = window.Divvy, N = window.Nook;
   var $ = function (id) { return document.getElementById(id); };
 
-  var rentEl = $("rent"), billsEl = $("bills"), depositEl = $("deposit"), roomsEl = $("rooms"), peopleEl = $("people");
+  var rentEl = $("rent"), billsEl = $("bills"), standingEl = $("standing"), depositEl = $("deposit"), roomsEl = $("rooms"), peopleEl = $("people");
   var ctaxEl = $("ctax"), studentsEl = $("students");
   var resultEl = $("result"), splitEl = $("split"), verdictEl = $("verdict"), saidEl = $("said");
   var tplRoom = $("tpl-room").content, tplPerson = $("tpl-person").content;
@@ -106,6 +106,7 @@
     var out = E.solve({
       rent: rentEl.value,
       bills: billsEl ? billsEl.value : "",
+      standing: standingEl ? standingEl.value : "",
       deposit: depositEl ? depositEl.value : "",
       names: people.map(function (p, i) { return (p.name || "").trim() || ("Person " + (i + 1)); }),
       rooms: rooms.map(function (r, i) { return (r || "").trim() || ("Room " + (i + 1)); }),
@@ -139,7 +140,10 @@
       var pay = out.bills > 0 ? p.total : p.rent;
       rent.dataset.pay = "$" + money(pay);
       if (out.bills > 0) {
-        rent.innerHTML = "$" + money(pay) + '<span class="s-break">$' + money(p.rent) + " rent + $" + money(p.bills) + " bills</span>";
+        var billsBreak = (out.standing > 0)
+          ? " bills ($" + money(p.billStanding) + " standing + $" + money(p.billUsage) + " usage)"
+          : " bills";
+        rent.innerHTML = "$" + money(pay) + '<span class="s-break">$' + money(p.rent) + " rent + $" + money(p.bills) + billsBreak + "</span>";
       } else {
         rent.textContent = "$" + money(pay);
       }
