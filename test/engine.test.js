@@ -278,3 +278,53 @@ test("each person sees how their rent compares to an even split", function () {
   assert.ok(r.people.some(function (p) { return p.vsEqual > 0; }));
   assert.ok(r.people.some(function (p) { return p.vsEqual < 0; }));
 });
+
+test("splitBill shares the standing charge equally and usage by weight", () => {
+  // $120 bill, $30 standing, rooms worth $1000 and $500
+  const r = Divvy.splitBill("120", "30", [1000, 500]);
+  assert.strictEqual(r.total, 12000);  // cents
+  assert.strictEqual(r.standing, 3000);
+  assert.strictEqual(r.usage, 9000);
+  // standing split equally: $15 each
+  assert.deepStrictEqual(r.standingShares, [1500, 1500]);
+  // usage $90 by 1000:500 -> $60 / $30
+  assert.deepStrictEqual(r.usageShares, [6000, 3000]);
+  // per-person totals: $75 and $45, adding back to $120
+  assert.deepStrictEqual(r.per, [7500, 4500]);
+  assert.strictEqual(r.per[0] + r.per[1], r.total);
+});
+
+test("splitBill with no standing charge is all usage", () => {
+  const r = Divvy.splitBill("100", "0", [1, 1]);
+  assert.strictEqual(r.standing, 0);
+  assert.deepStrictEqual(r.standingShares, [0, 0]);
+  assert.strictEqual(r.per[0] + r.per[1], 10000);
+});
+
+test("splitBill never lets the standing charge exceed the bill", () => {
+  const r = Divvy.splitBill("50", "80", [1, 1]);
+  assert.strictEqual(r.standing, 5000);
+  assert.strictEqual(r.usage, 0);
+});
+
+test("solve splits bills into standing (equal) and usage (by room) when given", () => {
+  const out = Divvy.solve({
+    rent: "2000", bills: "120", standing: "30",
+    rooms: ["Big", "Small"],
+    names: ["A", "B"],
+    bids: [["1400", "600"], ["1300", "700"]]
+  });
+  assert.ok(!out.error);
+  assert.strictEqual(out.standing, 3000);
+  // the two people's bill shares still add up to the whole bill
+  const sum = out.people.reduce((s, p) => s + p.bills, 0);
+  assert.strictEqual(sum, 12000);
+  // each person's standing + usage equals their bill share
+  out.people.forEach(p => assert.strictEqual(p.billStanding + p.billUsage, p.bills));
+  // the dearer room carries more of the usage
+  const big = out.people.find(p => p.room === "Big");
+  const small = out.people.find(p => p.room === "Small");
+  assert.ok(big.billUsage > small.billUsage);
+  // but the standing charge is equal
+  assert.strictEqual(big.billStanding, small.billStanding);
+});
