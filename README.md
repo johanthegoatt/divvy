@@ -22,6 +22,8 @@ That such a split always exists is a known result in fair division:
 - Alkan, Demange and Gale, *Fair Allocation of Indivisible Goods and Criteria of Justice*, Econometrica, 1991.
 - Gal, Mash, Procaccia and Zick, [*Which Is the Fairest (Rent Division) of Them All?*](https://procaccia.info/papers/rent.pdf), which is the method behind Spliddit.
 
+Beyond a plain yes/no on fairness, Divvy also reports the **margin**: how much each person prefers their own room-and-rent over the best room they could swap to. The tightest margin across the house shows how robust the split is, since a split where the closest call still comfortably prefers its own room holds up even if someone's valuation shifts a little.
+
 ## How it works
 
 1. **Your place.** Put in the total rent and name each room.
