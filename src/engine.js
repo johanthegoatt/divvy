@@ -252,17 +252,28 @@
     }
 
     // Check envy-freeness to the cent: nobody prefers another room at its rent.
+    // At the same time, work out each person's margin: how much better their own
+    // room-and-rent is, in their own eyes, than the best room they could swap to.
+    // A positive margin means they strictly prefer what they got; the bigger it
+    // is, the more comfortably the choice holds if the rents shift a little. The
+    // tightest margin across the house is how robust the whole split is.
     var envyFree = true, worstEnvy = 0;
     for (var x = 0; x < n; x++) {
       var mineRoom = m.room[x];
       var mineDeal = value[x][mineRoom] - price[mineRoom];
+      var bestOther = null;
       for (var k = 0; k < n; k++) {
         var otherDeal = value[x][k] - price[k];
+        if (k !== mineRoom && (bestOther === null || otherDeal > bestOther)) bestOther = otherDeal;
         var envy = otherDeal - mineDeal;
         if (envy > worstEnvy) worstEnvy = envy;
         if (envy > 1) envyFree = false; // within one cent counts as fair
       }
+      // The margin over the next-best room (only one room means no alternative).
+      result[x].margin = bestOther === null ? null : mineDeal - bestOther;
     }
+    var margins = result.map(function (r) { return r.margin; }).filter(function (v) { return v !== null; });
+    var tightestMargin = margins.length ? Math.min.apply(null, margins) : null;
 
     return {
       rent: rent,
@@ -284,6 +295,9 @@
       rooms: rooms,
       envyFree: envyFree,
       worstEnvy: worstEnvy,
+      // The smallest per-person margin: how much the tightest person prefers
+      // their own room over swapping. Bigger means a more robust split.
+      tightestMargin: tightestMargin,
       // The spread of rents, handy for a one-line summary.
       highest: Math.max.apply(null, price),
       lowest: Math.min.apply(null, price)
