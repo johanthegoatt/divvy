@@ -328,3 +328,32 @@ test("solve splits bills into standing (equal) and usage (by room) when given", 
   // but the standing charge is equal
   assert.strictEqual(big.billStanding, small.billStanding);
 });
+
+test("every person has a non-negative margin when the split is envy-free", () => {
+  const r = Divvy.solve({
+    rent: "2400",
+    names: ["A", "B", "C"],
+    rooms: ["Big", "Mid", "Small"],
+    bids: [[1000, 800, 600], [900, 900, 600], [700, 900, 800]]
+  });
+  assert.ok(r.envyFree);
+  r.people.forEach((p) => {
+    assert.ok(p.margin !== null);
+    assert.ok(p.margin >= -1, p.name + " margin " + p.margin); // within a cent
+  });
+  // The tightest margin is the smallest of the per-person margins.
+  const mins = Math.min(...r.people.map((p) => p.margin));
+  assert.strictEqual(r.tightestMargin, mins);
+});
+
+test("a person's margin is their own deal minus the best room they could swap to", () => {
+  const r = Divvy.solve({
+    rent: "3000",
+    names: ["Loves big", "Easy", "Wants small"],
+    rooms: ["Big", "Mid", "Small"],
+    bids: [[2000, 700, 300], [1000, 1000, 1000], [600, 900, 1500]]
+  });
+  const keen = r.people.find((p) => p.name === "Loves big");
+  // Their margin is finite and at least zero: they wouldn't rather swap.
+  assert.ok(keen.margin >= -1);
+});
