@@ -188,7 +188,17 @@
     }
     if (out.envyFree) {
       verdictEl.className = "verdict ok";
-      verdictEl.textContent = "Everyone is glad of their own room at this price. Nobody would rather pay what someone else pays for their room.";
+      var base = "Everyone is glad of their own room at this price. Nobody would rather pay what someone else pays for their room.";
+      // The tightest margin says how comfortably the split holds: a bigger
+      // number means it stays fair even if someone's valuation shifts a little.
+      if (out.tightestMargin !== null && out.tightestMargin !== undefined) {
+        if (out.tightestMargin > 1) {
+          base += " The closest call still prefers their own room by $" + money(out.tightestMargin) + " a month, so it holds up comfortably.";
+        } else {
+          base += " It's a close call for at least one person, so a small change in what someone values a room at could tip it.";
+        }
+      }
+      verdictEl.textContent = base;
     } else {
       verdictEl.className = "verdict";
       verdictEl.textContent = "This is the closest fair split for these bids.";
